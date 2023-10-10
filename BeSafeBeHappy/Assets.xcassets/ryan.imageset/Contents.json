@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "kentanrecirc-587700af52e748ca982715c6cd95b65e.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
