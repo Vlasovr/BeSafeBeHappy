@@ -20,7 +20,7 @@ class NewPhotoViewController: UIViewController {
         if let imageName = realImageName {
             imageView.image = UIImage(named: imageName)
         } else {
-            imageView.image = UIImage(systemName: "plus")
+            imageView.image = UIImage(systemName: Constants.Text.NewPhotoController.plusImage)
         }
         imageView.tintColor = .gray
         imageView.backgroundColor = .secondarySystemBackground
@@ -42,14 +42,14 @@ class NewPhotoViewController: UIViewController {
     }()
     
     private lazy var cameraButton = {
-       let button = AdaptiveButton(image: UIImage(systemName: "camera"))
+        let button = AdaptiveButton(image: UIImage(systemName: Constants.Text.NewPhotoController.cameraImage))
         button.addTarget(self, action: #selector(takeNewPhoto(_:)), for: .touchUpInside)
         return button
     }()
 
     private lazy var saveButton = {
-        let button = AdaptiveButton(title: "Cохранить",
-                                    image: UIImage(systemName: "checkmark.rectangle.fill"),
+        let button = AdaptiveButton(title: Constants.Text.NewPhotoController.saveTitle,
+                                    image: UIImage(systemName: Constants.Text.NewPhotoController.saveImage),
                                     fontSize: Constants.FontSizes.large)
         button.addTarget(self, action: #selector(savePhoto(_:)), for: .touchUpInside)
         return button
@@ -77,9 +77,9 @@ class NewPhotoViewController: UIViewController {
         view.endEditing(true)
         let photoNameTextField = UITextField()
         
-        showAlertWithTextField(messageTitle: "Добавьте имя фото", 
+        showAlertWithTextField(messageTitle: Constants.Text.NewPhotoController.messageTitle,
                                alertStyle: .alert,
-                               firstButtonTitle: "Ок",
+                               firstButtonTitle: Constants.Text.NewPhotoController.firstButtonTitle,
                                firstAlertActionStyle: .default,
                                usersTextField: photoNameTextField) { [weak self] text in
             
@@ -158,7 +158,12 @@ class NewPhotoViewController: UIViewController {
     }
     
     private func showPhotoAlert() {
-        showAlert(messageTitle: "ChoosePhoto", alertStyle: .actionSheet, firstButtonTitle: "Library", secondButtonTitle: "Camera", firstAlertActionStyle: .default, secondAlertActionStyle: .default, firstHandler:  {
+        showAlert(messageTitle: Constants.Text.NewPhotoController.showPhotoAlert.messageTitle, alertStyle: .actionSheet,
+                  firstButtonTitle: Constants.Text.NewPhotoController.showPhotoAlert.firstButtonTitle,
+                  secondButtonTitle: Constants.Text.NewPhotoController.showPhotoAlert.secondButtonTitle,
+                  firstAlertActionStyle: .default,
+                  secondAlertActionStyle: .default, firstHandler:  {
+            
             self.showPicker(source: .photoLibrary)
         }) {
             self.showPicker(source: .camera)

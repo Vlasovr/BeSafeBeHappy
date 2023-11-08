@@ -1,23 +1,24 @@
 import UIKit
+import SwiftyKeychainKit
 
 final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
     
     private lazy var loginLabel = {
-        let label = UILabel(text: "Login",
+        let label = UILabel(text: Constants.Text.AuthorizationController.loginTextLabel,
                             font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
                             textColor: .black)
         return label
     }()
     
     private let passwordLabel = {
-        let label = UILabel(text: "Password",
+        let label = UILabel(text: Constants.Text.AuthorizationController.passwordLabelText,
                             font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
                             textColor: .black)
         return label
     }()
     
     private lazy var loginTextField = {
-        let textField = UITextField(text: "example@email.com",
+        let textField = UITextField(text: Constants.Text.AuthorizationController.loginText,
                                     font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
                                     textColor: .black)
         textField.delegate = self
@@ -25,42 +26,32 @@ final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
     }()
     
     private lazy var passwordTextField = {
-        let textField = UITextField(text: "****",
+        let textField = UITextField(text: Constants.Text.AuthorizationController.passwordText,
                                     font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
                                     textColor: .black)
         textField.delegate = self
         return textField
     }()
     
-    private lazy var faceIdLabel = {
-        let label = UILabel(text: "Вход по Face ID",
-                            font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
-                            textColor: .black)
-        return label
-    }()
-    
-    private var faceIdSwitch = UISwitch()
-    
     private let signInButton = {
-        let button = AdaptiveButton(title: "Войти", fontSize: Constants.FontSizes.large)
+        let button = AdaptiveButton(title: Constants.Text.AuthorizationController.signInButtonTitle, fontSize: Constants.FontSizes.large)
         button.addTarget(self, action: #selector(authorizate(_:)), for: .touchUpInside)
         return button
     }()
     
     private lazy var signInLabel = {
-        let label = UILabel(text: "Sign in",
+        let label = UILabel(text: Constants.Text.AuthorizationController.signInText,
                             font: UIFont.systemFont(ofSize: Constants.FontSizes.large),
                             textColor: .black)
         return label
     }()
     
-    private var userAuthorization = ["example@email.com": "****"]
-    
+    private var userAuthorization = [Constants.Text.AuthorizationController.loginText: Constants.Text.AuthorizationController.passwordText]
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         setupUI()
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -76,19 +67,19 @@ final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
         }
         
         guard isCorrectData else {
-            loginTextField.text = ""
-            passwordTextField.text = ""
-            showAlert(alertTitle: "Ошибка", messageTitle: "Неправильно введен логин и пароль", alertStyle: .alert, firstButtonTitle: "Окей, летсгоу", firstAlertActionStyle: .cancel)
+            loginTextField.text = nil
+            passwordTextField.text = nil
+            showAlert(alertTitle: Constants.Text.AuthorizationController.alertTitle,
+                      messageTitle: Constants.Text.AuthorizationController.messageTitle,
+                      alertStyle: .alert,
+                      firstButtonTitle: Constants.Text.AuthorizationController.firstButtonTitle,
+                      firstAlertActionStyle: .cancel)
             return
         }
-
-        let mainController = ContentViewController()
+        
+        let mainController = GalleryController()
         let dataSource = loadUserData()
         mainController.dataSourceFolder = dataSource
-        //CALLBACKS?
-        mainController.callback = { dataSource in
-            mainController.handleNestedFolder(dataSource)
-        }
         navigationController?.pushViewController(mainController, animated: false)
     }
     
@@ -124,8 +115,6 @@ final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
         view.addSubview(loginTextField)
         view.addSubview(passwordLabel)
         view.addSubview(passwordTextField)
-        view.addSubview(faceIdLabel)
-        view.addSubview(faceIdSwitch)
         view.addSubview(signInLabel)
         view.addSubview(signInButton)
     }
@@ -138,8 +127,8 @@ final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
     //MARK: - если в текстфилде текст с примером - при нажатии - стираем поле
     func textFieldDidBeginEditing(_ textField: UITextField) {
         
-        if textField.text == "example@email.com" || textField.text == "****" || textField.text == "Введите имя" {
-            textField.text = ""
+        if textField.text == Constants.Text.AuthorizationController.loginText || textField.text == Constants.Text.AuthorizationController.passwordText {
+            textField.text = nil
         }
     }
 }
@@ -168,11 +157,6 @@ extension AuthorizationViewController {
             make.left.equalTo(Constants.Offsets.big)
             make.top.equalTo(passwordLabel.snp.bottom).offset(Constants.Offsets.medium)
             make.width.equalTo(Constants.Sizes.AuthorizationController.labelsWidth)
-        }
-        
-        faceIdSwitch.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-Constants.Offsets.big)
-            make.top.equalTo(passwordTextField.snp.top)
         }
         
         signInLabel.snp.makeConstraints { make in

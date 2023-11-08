@@ -1,11 +1,8 @@
 import UIKit
 
-
-class ContentViewController: UIViewController {
+class GalleryController: UIViewController {
     
-    var callback: ((Folder?) -> Void?)?
-    
-    var dataSourceFolder: Folder?
+    var dataSourceFolder: MainControllerDataSource?
     
     private lazy var photosCollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
@@ -18,32 +15,27 @@ class ContentViewController: UIViewController {
     }()
     
     private lazy var plusButton = {
-        let button = AdaptiveButton(title: "Добавить новое фото",
-                                    image: UIImage(systemName: "plus.circle") ?? UIImage(),
+        let button = AdaptiveButton(title: Constants.Text.GalleryController.plusButtonTitle,
+                                    image: UIImage(systemName: Constants.Text.GalleryController.plusButtonImage ) ?? UIImage(),
                                     fontSize: Constants.FontSizes.medium)
         button.addTarget(self, action: #selector(showAddingPhotoScreen(_:)), for: .touchUpInside)
         return button
     }()
     
-    private lazy var contentView = {
-        let view = UIView()
-        return view
-    }()
+    private lazy var contentView = UIView()
     
     private var collectionViewDataSource = [CellModel]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        dataSourceFolder
-        dataSourceFolder = UserDefaults.standard.object(Folder.self, forKey: Constants.UserDefaultsKeys.contentList)
+        dataSourceFolder = UserDefaults.standard.object(MainControllerDataSource.self, forKey: Constants.UserDefaultsKeys.mainDataSource)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         if let dataSourceFolder {
-            UserDefaults.standard.set(encodable: dataSourceFolder, forKey: Constants.UserDefaultsKeys.contentList)
+            UserDefaults.standard.set(encodable: dataSourceFolder, forKey: Constants.UserDefaultsKeys.mainDataSource)
         }
-        callback?(dataSourceFolder)
     }
     
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
@@ -79,47 +71,42 @@ class ContentViewController: UIViewController {
     @objc func addFolder(_ sender: UIBarButtonItem) {
         let alertTextField = UITextField()
         
-        showAlertWithTextField(alertTitle: "Добавить папку",
-                               messageTitle: "Имя папки",
+        showAlertWithTextField(alertTitle: Constants.Text.GalleryController.alertTitle,
+                               messageTitle: Constants.Text.GalleryController.messageTitle,
                                alertStyle: .alert,
-                               firstButtonTitle: "Ok",
+                               firstButtonTitle: Constants.Text.GalleryController.firstButtonTitle,
                                firstAlertActionStyle: .default,
                                usersTextField: alertTextField) { [weak self] text in
-            let newFolder = Folder(insideFolders: nil, photosList: nil, title: text)
+            let newFolder = Folder(photosList: nil, title: text)
             self?.addNewFolder(folder: newFolder)
         }
     }
     
     private func addNewFolder(folder: Folder) {
-        if let dataSourceInsideFolder = dataSourceFolder?.insideFolders {
-            dataSourceFolder?.insideFolders?.append(folder)
+        if let dataSourceFolders = dataSourceFolder?.folders {
+            dataSourceFolder?.folders?.append(folder)
         } else {
             //if first folder added
-            dataSourceFolder?.insideFolders = [folder]
+            dataSourceFolder?.folders = [folder]
         }
+        
         collectionViewDataSource.append(makeFolderCellModel(folder: folder))
         photosCollectionView.reloadData()
     }
     
     private func setupContentScreenTitle() {
-        //is First сontent screen?
-        if dataSourceFolder?.title ==  Constants.Text.galeryTitle {
-            navigationItem.hidesBackButton = true
-        }
-        
+        navigationItem.hidesBackButton = true
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        navigationItem.rightBarButtonItems = [UIBarButtonItem(image: UIImage(systemName: "photo"),
+        navigationItem.rightBarButtonItems = [UIBarButtonItem(image: UIImage(systemName: Constants.Text.GalleryController.photoImage),
                                                                                             style: .plain,
                                                                                             target: self,
                                                                                             action: #selector(addPhoto(_:))),
-                                                                            UIBarButtonItem(image: UIImage(systemName: "folder.badge.plus"),
+                                                                            UIBarButtonItem(image: UIImage(systemName: Constants.Text.GalleryController.UIBarButtonItemImage),
                                                                                             style: .plain,
                                                                                             target: self,
-                                                                                            action: #selector(addFolder(_:)))
-        ]
-        title = dataSourceFolder?.title
+                                                                                            action: #selector(addFolder(_:)))]
     }
     
     
@@ -132,14 +119,14 @@ class ContentViewController: UIViewController {
     }
     
     private func configureCollectionDataSource() {
-        dataSourceFolder?.insideFolders?.forEach { folder  in
+        dataSourceFolder?.folders?.forEach { folder  in
             let cellModel = CellModel(title: folder.title,
                                       imageName: "",
                                       isAlbum: true)
             collectionViewDataSource.append(cellModel)
         }
         
-        dataSourceFolder?.photosList?.forEach { photo in
+        dataSourceFolder?.photoList?.forEach { photo in
             let cellModel = CellModel(title: photo.imageName,
                                       imageName: photo.path,
                                       isAlbum: false)
@@ -171,7 +158,7 @@ class ContentViewController: UIViewController {
         photosCollectionView.addGestureRecognizer(tap)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        longPress.minimumPressDuration = 1
+        longPress.minimumPressDuration = Constants.longPressDuration
         longPress.delegate = self
         photosCollectionView.addGestureRecognizer(longPress)
                                                 
@@ -185,25 +172,22 @@ class ContentViewController: UIViewController {
     }
     
     func createNewContentListScreen(folder: Folder) {
-        let newContentScreen = ContentViewController()
-        newContentScreen.dataSourceFolder = folder
-        newContentScreen.callback = { [weak self] folder in
-            self?.callback?(folder)
-        }
+        let newContentScreen = FolderContentController()
+        newContentScreen.sourceFolder = folder
         navigationController?.pushViewController(newContentScreen, animated: true)
     }
     
     func searchChosenFolder(from cell: CellModel) -> Folder {
-        let contentList = dataSourceFolder?.insideFolders
+        let contentList = dataSourceFolder?.folders
         if let matchingFolder = contentList?.first(where: { $0.title == cell.title}) {
             return matchingFolder
         }
         
-        return Folder(insideFolders: nil, photosList: nil, title: "")
+        return Folder(photosList: nil, title: "")
     }
 }
 
-extension ContentViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+extension GalleryController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         collectionViewDataSource.count
     }
@@ -246,16 +230,15 @@ extension ContentViewController: UICollectionViewDelegate, UICollectionViewDataS
     }
 }
 
-extension ContentViewController: UIGestureRecognizerDelegate, AddNewPhotoDelegate {
+extension GalleryController: UIGestureRecognizerDelegate, AddNewPhotoDelegate {
     func addNewPhoto(photoModel: PhotoMetaData) {
-        if let dataSourcePhotoList = dataSourceFolder?.photosList {
-            dataSourceFolder?.photosList?.append(photoModel)
+        if let dataSourcePhotoList = dataSourceFolder?.photoList {
+            dataSourceFolder?.photoList?.append(photoModel)
         } else {
             //if first folder added
-            dataSourceFolder?.photosList = [photoModel]
+            dataSourceFolder?.photoList = [photoModel]
         }
         collectionViewDataSource.append(makePhotoCellModel(photoModel: photoModel))
         photosCollectionView.reloadData()
     }
-    
 }

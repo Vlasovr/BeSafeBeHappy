@@ -53,17 +53,42 @@ enum Constants {
         }
         
         enum AuthorizationController {
-
+            static let loginTextLabel = "Login"
+            static let passwordLabelText = "Password"
+            static let loginText = "example@email.com"
+            static let passwordText = "****"
+            static let signInButtonTitle = "Войти"
+            static let signInText = "Login"
+            static let alertTitle = "Ошибка"
+            static let messageTitle = "Неправильно введен логин и пароль"
+            static let firstButtonTitle = "Окей, летсгоу"
         }
 
-        enum MainController {
-
+        enum GalleryController {
+            static let plusButtonTitle = "Добавить новое фото"
+            static let plusButtonImage = "plus.circle"
+            static let alertTitle = "Добавить папку"
+            static let messageTitle = "Имя папки"
+            static let firstButtonTitle = "Ok"
+            static let photoImage = "photo"
+            static let UIBarButtonItemImage = "folder.badge.plus"
         }
         
         enum NewPhotoController {
             static let desriptionTextfieldText = "There would be some photo description"
             static let notFavourite = "heart"
             static let favourite = "heart.fill"
+            static let plusImage = "plus"
+            static let cameraImage = "camera"
+            static let saveTitle = "Сохранить"
+            static let saveImage = "checkmark.rectangle.fill"
+            static let messageTitle = "Добавить имя фото"
+            static let firstButtonTitle = "Ok"
+            enum showPhotoAlert {
+                static let messageTitle = "ChoosePhoto"
+                static let firstButtonTitle =  "Library"
+                static let secondButtonTitle = "Camera"
+            }
         }
 
     }
@@ -76,10 +101,13 @@ enum Constants {
     }
     
     enum UserDefaultsKeys {
-        static let appEntries = "AppEntries"
-        static let contentList = "ContentList"
+        static let mainDataSource = "MainDataSource"
+       // static let mainDataSource = "MainDataSource"
     }
-    static let defaultFolder = Folder(insideFolders: nil, photosList: nil, title: Constants.Text.galeryTitle)
+    
+    static let longPressDuration: TimeInterval = 1
+    
+    static let defaultFolder = Folder( photosList: nil, title: Constants.Text.galeryTitle)
     //static let defaultFolder = Folder(insideFolders: someFolder, photosList: photosListFolder, title: Constants.Text.galeryTitle)
 }
 
