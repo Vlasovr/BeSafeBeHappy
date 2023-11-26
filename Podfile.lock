@@ -1,0 +1,20 @@
+PODS:
+  - SnapKit (5.6.0)
+  - SwiftyKeychainKit (1.0.0-beta.2)
+
+DEPENDENCIES:
+  - SnapKit (~> 5.6.0)
+  - SwiftyKeychainKit (= 1.0.0-beta.2)
+
+SPEC REPOS:
+  trunk:
+    - SnapKit
+    - SwiftyKeychainKit
+
+SPEC CHECKSUMS:
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+  SwiftyKeychainKit: dcbb1098d4fa1548282287a6beb186f9393e9025
+
+PODFILE CHECKSUM: 5692788379d0d1be543f41822b59347e0099b076
+
+COCOAPODS: 1.12.1
