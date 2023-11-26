@@ -16,12 +16,12 @@ var secondPhotosListFolder = Array([PhotoMetaData(imageName: "kitty", descriptio
                                     thirdSimplePhoto
                                    ].reversed())
 
-var someFolder = [Folder(insideFolders: [someInsideFolder], 
+var someFolder = [Folder(
                          photosList: secondPhotosListFolder,
                          title: "some folder inside"),
-                  Folder(insideFolders: nil, photosList: secondPhotosListFolder, title: "some 2 folder inside")]
+                  Folder(photosList: secondPhotosListFolder, title: "some 2 folder inside")]
 
-var someInsideFolder = Folder(insideFolders: nil, photosList: secondPhotosListFolder, title: "some folder x2 inside")
+var someInsideFolder = Folder(photosList: secondPhotosListFolder, title: "some folder x2 inside")
 
 var firstSimplePhoto = PhotoMetaData(imageName: "ronaldo", description: "some ronaldo", isFavourite: false)
 var secondSimplePhoto = PhotoMetaData(imageName: "kitty", description: "some kitty", isFavourite: false)
@@ -44,6 +44,6 @@ var photosListFolder = [firstSimplePhoto,
 ]
 
 
-var someContent = Folder(insideFolders: someFolder,
+var someContent = Folder(
                          photosList: photosListFolder,
                          title: "Галерея")

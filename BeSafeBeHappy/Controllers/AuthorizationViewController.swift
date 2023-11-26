@@ -91,19 +91,18 @@ final class AuthorizationViewController: UIViewController, UITextFieldDelegate {
         return false
     }
     
-    private func loadUserData() -> Folder {
+    private func loadUserData() -> MainControllerDataSource {
         if !checkIsFirstEntry() {
-            if let data = UserDefaults.standard.object(Folder.self, forKey: Constants.UserDefaultsKeys.contentList) {
+            if let data = UserDefaults.standard.object(MainControllerDataSource.self, forKey: Constants.UserDefaultsKeys.mainDataSource) {
                 return data
             }
         } else {
-            UserDefaults.standard.set(encodable: Constants.defaultFolder, forKey: Constants.UserDefaultsKeys.contentList)
+            UserDefaults.standard.set(encodable: Constants.defaultFolder, forKey: Constants.UserDefaultsKeys.mainDataSource)
         }
         
         return Constants.defaultFolder
     }
-    
-    
+
     private func setupUI() {
         navigationController?.isNavigationBarHidden = true
         addSubviews()

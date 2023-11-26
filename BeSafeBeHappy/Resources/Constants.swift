@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 enum Constants {
     
@@ -8,7 +8,7 @@ enum Constants {
         static let big = 32.0
         static let large = 64.0
         static let hyper = 128.0
-        static let textFieldGoingUpBottomOffset = 200.0
+        static let textFieldGoingUpBottomOffset = 100.0
     }
     
     enum WobbleSettings {
@@ -19,7 +19,6 @@ enum Constants {
     }
     
     enum Sizes {
-        
         enum Defaults {
             static let radius = 14.0
         }
@@ -33,11 +32,12 @@ enum Constants {
         enum MainController {
             static let addButtonHeight = 50.0
             static let addButtonWidth = 260.0
+            static let deleteButtonSide = 24.0
         }
         
         enum NewPhotoController {
             static let photoWidth = 340
-            static let photoHeight = 400
+            static let photoHeight = 450
             static let descriptionTextFieldWidth = 280
             static let heartSide = 50
             static let saveButtonHeight = 50.0
@@ -46,10 +46,10 @@ enum Constants {
     }
     
     enum Text {
-        static let galeryTitle = "Галерея"
-        
         enum Defaults {
             static let radius = 14.0
+            static let defaultSpeedAnimation = 0.3
+            static let slideInSpeedAnimation = 0.15
         }
         
         enum AuthorizationController {
@@ -65,6 +65,7 @@ enum Constants {
         }
 
         enum GalleryController {
+            static let galleryText = "Галерея"
             static let plusButtonTitle = "Добавить новое фото"
             static let plusButtonImage = "plus.circle"
             static let alertTitle = "Добавить папку"
@@ -75,22 +76,24 @@ enum Constants {
         }
         
         enum NewPhotoController {
-            static let desriptionTextfieldText = "There would be some photo description"
+            static let navigationBarTitle = "Добавьте свои лучшие воспоминания"
+            static let leafletTitle = "Листайте на здоровье"
+            static let desriptionTextfieldText = "Какое-то описание фото"
             static let notFavourite = "heart"
             static let favourite = "heart.fill"
             static let plusImage = "plus"
             static let cameraImage = "camera"
-            static let saveTitle = "Сохранить"
+            static let backTitle = "Назад"
             static let saveImage = "checkmark.rectangle.fill"
             static let messageTitle = "Добавить имя фото"
             static let firstButtonTitle = "Ok"
+            
             enum showPhotoAlert {
                 static let messageTitle = "ChoosePhoto"
                 static let firstButtonTitle =  "Library"
                 static let secondButtonTitle = "Camera"
             }
         }
-
     }
     
     enum FontSizes {
@@ -101,13 +104,12 @@ enum Constants {
     }
     
     enum UserDefaultsKeys {
+        static let appEntries = "AppEntries"
         static let mainDataSource = "MainDataSource"
-       // static let mainDataSource = "MainDataSource"
     }
     
-    static let longPressDuration: TimeInterval = 1
-    
-    static let defaultFolder = Folder( photosList: nil, title: Constants.Text.galeryTitle)
-    //static let defaultFolder = Folder(insideFolders: someFolder, photosList: photosListFolder, title: Constants.Text.galeryTitle)
+    static let longPressDuration: TimeInterval = 1    
+    static let defaultFolder = MainControllerDataSource()
+    static let backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.5)
 }
 

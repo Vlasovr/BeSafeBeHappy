@@ -24,36 +24,58 @@ class GalleryController: UIViewController {
     
     private lazy var contentView = UIView()
     
-    private var collectionViewDataSource = [CellModel]()
+    private var collectionViewDataSource = [CellModel]() {
+        didSet {
+            collectionViewDataSource.sort { (model1, model2) -> Bool in
+                if model1.isAlbum && !model2.isAlbum {
+                    return true
+                } else if !model1.isAlbum && model2.isAlbum {
+                    return false
+                } else {
+                    return model1.title < model2.title
+                }
+            }
+            photosCollectionView.reloadData()
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        dataSourceFolder = UserDefaults.standard.object(MainControllerDataSource.self, forKey: Constants.UserDefaultsKeys.mainDataSource)
+        setupDataSource()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        if let dataSourceFolder {
-            UserDefaults.standard.set(encodable: dataSourceFolder, forKey: Constants.UserDefaultsKeys.mainDataSource)
-        }
+        saveDataSource()
     }
     
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: photosCollectionView)
         if let indexPath = photosCollectionView.indexPathForItem(at: location) {
             let item = collectionViewDataSource[indexPath.item]
+            
             if item.isAlbum {
                 let realFolder = searchChosenFolder(from: item)
                 createNewContentListScreen(folder: realFolder)
             } else {
-                showImageEditingScreen(imageName: item.imageName)
+                guard let list = dataSourceFolder?.photoList,
+                      let imageIndex = list.firstIndex(where: { $0.imageName == item.title }) else { return }
+                let leafletController = LeafletController(photoList: list,
+                                                          imageName: item.imageName,
+                                                          isFavourite: item.isFavourite ?? false,
+                                                          currentImageIndex: imageIndex)
+                navigationController?.pushViewController(leafletController, animated: true)
             }
+        }
+        else {
+            stopEditing()
         }
     }
     
     @objc func handleLongPress(_ sender: UILongPressGestureRecognizer) {
         photosCollectionView.indexPathsForVisibleItems.forEach { (indexPath) in
             let cell = photosCollectionView.cellForItem(at: indexPath) as? ContentCollectionViewCell
+            cell?.startEditingMode()
             cell?.wobble()
         }
     }
@@ -82,15 +104,38 @@ class GalleryController: UIViewController {
         }
     }
     
+    private func stopEditing() {
+        pauseLayer(layer: photosCollectionView.layer)
+        for indexPath in photosCollectionView.indexPathsForVisibleItems {
+            if let cell = photosCollectionView.cellForItem(at: indexPath) as? ContentCollectionViewCell {
+                cell.endEditingMode()
+            }
+        }
+    }
+    
+    private func setupDataSource() {
+        dataSourceFolder = UserDefaults.standard.object(MainControllerDataSource.self, forKey: Constants.UserDefaultsKeys.mainDataSource)
+        
+        if dataSourceFolder == nil {
+            dataSourceFolder = MainControllerDataSource()
+        }
+    }
+    
+    private func saveDataSource() {
+        if let dataSourceFolder {
+            UserDefaults.standard.set(encodable: dataSourceFolder, forKey: Constants.UserDefaultsKeys.mainDataSource)
+        }
+    }
+    
     private func addNewFolder(folder: Folder) {
         if let dataSourceFolders = dataSourceFolder?.folders {
             dataSourceFolder?.folders?.append(folder)
         } else {
-            //if first folder added
             dataSourceFolder?.folders = [folder]
         }
         
         collectionViewDataSource.append(makeFolderCellModel(folder: folder))
+        saveDataSource()
         photosCollectionView.reloadData()
     }
     
@@ -98,15 +143,18 @@ class GalleryController: UIViewController {
         navigationItem.hidesBackButton = true
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.prefersLargeTitles = true
+        title = Constants.Text.GalleryController.galleryText
         
-        navigationItem.rightBarButtonItems = [UIBarButtonItem(image: UIImage(systemName: Constants.Text.GalleryController.photoImage),
-                                                                                            style: .plain,
-                                                                                            target: self,
-                                                                                            action: #selector(addPhoto(_:))),
-                                                                            UIBarButtonItem(image: UIImage(systemName: Constants.Text.GalleryController.UIBarButtonItemImage),
-                                                                                            style: .plain,
-                                                                                            target: self,
-                                                                                            action: #selector(addFolder(_:)))]
+        navigationItem.rightBarButtonItems = [UIBarButtonItem(image:
+                                                                UIImage(systemName:
+                                                                            Constants.Text.GalleryController.photoImage),
+                                                              style: .plain,
+                                                              target: self,
+                                                              action: #selector(addPhoto(_:))),
+                                              UIBarButtonItem(image: UIImage(systemName: Constants.Text.GalleryController.UIBarButtonItemImage),
+                                                              style: .plain,
+                                                              target: self,
+                                                              action: #selector(addFolder(_:)))]
     }
     
     
@@ -129,6 +177,7 @@ class GalleryController: UIViewController {
         dataSourceFolder?.photoList?.forEach { photo in
             let cellModel = CellModel(title: photo.imageName,
                                       imageName: photo.path,
+                                      isFavourite: photo.isFavourite,
                                       isAlbum: false)
             collectionViewDataSource.append(cellModel)
         }
@@ -137,14 +186,15 @@ class GalleryController: UIViewController {
     private func makePhotoCellModel(photoModel: PhotoMetaData) -> CellModel {
         CellModel(title: photoModel.imageName,
                   imageName: photoModel.path,
+                  isFavourite: photoModel.isFavourite,
                   isAlbum: false)
-        
     }
     
     private func makeFolderCellModel(folder: Folder) -> CellModel {
         CellModel(title: folder.title,
-                                  imageName: "",
-                                  isAlbum: true)
+                  imageName: "",
+                  isFavourite: false,
+                  isAlbum: true)
     }
     
     private func addSubviews() {
@@ -154,6 +204,7 @@ class GalleryController: UIViewController {
     }
     
     func addGestureRecognizer() {
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         photosCollectionView.addGestureRecognizer(tap)
         
@@ -161,7 +212,6 @@ class GalleryController: UIViewController {
         longPress.minimumPressDuration = Constants.longPressDuration
         longPress.delegate = self
         photosCollectionView.addGestureRecognizer(longPress)
-                                                
     }
     
     func showImageEditingScreen(imageName: String) {
@@ -172,8 +222,7 @@ class GalleryController: UIViewController {
     }
     
     func createNewContentListScreen(folder: Folder) {
-        let newContentScreen = FolderContentController()
-        newContentScreen.sourceFolder = folder
+        let newContentScreen = FolderContentController(sourceFolder: folder)
         navigationController?.pushViewController(newContentScreen, animated: true)
     }
     
@@ -197,7 +246,7 @@ extension GalleryController: UICollectionViewDelegate, UICollectionViewDataSourc
                                                             for: indexPath) as? ContentCollectionViewCell else {
             return ContentCollectionViewCell()
         }
-        
+        cell.delegate = self
         cell.configure(model: collectionViewDataSource[indexPath.item])
         return cell
         
@@ -238,7 +287,43 @@ extension GalleryController: UIGestureRecognizerDelegate, AddNewPhotoDelegate {
             //if first folder added
             dataSourceFolder?.photoList = [photoModel]
         }
+        
+        saveDataSource()
         collectionViewDataSource.append(makePhotoCellModel(photoModel: photoModel))
         photosCollectionView.reloadData()
+    }
+}
+
+extension GalleryController: EditPhotoDelegate {
+    func saveDate(photoList: [PhotoMetaData]) {
+        dataSourceFolder?.photoList = photoList
+        saveDataSource()
+    }
+}
+
+extension GalleryController: ContentCollectionViewCellDelegate {
+    func contentCellDidTapDelete(_ cell: ContentCollectionViewCell) {
+        guard let indexPath = photosCollectionView.indexPath(for: cell) else { return }
+        
+        let isAlbum = collectionViewDataSource[indexPath.item].isAlbum
+        let name = collectionViewDataSource[indexPath.item].title
+        
+        collectionViewDataSource.remove(at: indexPath.item)
+        
+        if isAlbum {
+            if let folderIndex = dataSourceFolder?.folders?.firstIndex(where: { $0.title == name }) {
+                dataSourceFolder?.folders?.remove(at: folderIndex)
+            }
+        } else {
+            if let imageIndex = dataSourceFolder?.photoList?.firstIndex(where: { $0.imageName == name }) {
+                dataSourceFolder?.photoList?.remove(at: imageIndex)
+            }
+        }
+        
+        photosCollectionView.performBatchUpdates{
+            photosCollectionView.deleteItems(at: [indexPath])
+        }
+        
+        saveDataSource()
     }
 }

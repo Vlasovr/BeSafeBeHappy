@@ -1,8 +1,13 @@
 import UIKit
+protocol ContentCollectionViewCellDelegate: AnyObject {
+    func contentCellDidTapDelete(_ cell: ContentCollectionViewCell)
+}
 
 class ContentCollectionViewCell: UICollectionViewCell {
 
     static var identifier: String { "\(Self.self)" }
+    
+    weak var delegate: ContentCollectionViewCellDelegate?
     
         private var imageView = {
         let iv = UIImageView()
@@ -13,6 +18,7 @@ class ContentCollectionViewCell: UICollectionViewCell {
     }()
     
     private var titleLabel = UILabel()
+    let deleteButton = UIButton()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -46,6 +52,10 @@ class ContentCollectionViewCell: UICollectionViewCell {
         imageView.roundCorners()
     }
     
+    @objc func deleteButtonTapped() {
+        delegate?.contentCellDidTapDelete(self)
+    }
+    
     func configure(model: CellModel) {
         if model.isAlbum  {
             imageView.image = UIImage(systemName: "folder.fill")
@@ -55,5 +65,19 @@ class ContentCollectionViewCell: UICollectionViewCell {
             imageView.image = DataManager.shared.loadImage(fileName: model.imageName)
             titleLabel.text = model.title
         }
+    }
+    
+    func startEditingMode() {
+        deleteButton.setImage(UIImage(systemName: "xmark.circle"), for: .normal)
+        contentView.addSubview(deleteButton)
+        deleteButton.frame = CGRect(x: imageView.frame.maxX - Constants.Sizes.MainController.deleteButtonSide,
+                                    y: imageView.frame.minY,
+                                    width: Constants.Sizes.MainController.deleteButtonSide,
+                                    height: Constants.Sizes.MainController.deleteButtonSide)
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    }
+    
+    func endEditingMode() {
+        deleteButton.removeFromSuperview()
     }
 }

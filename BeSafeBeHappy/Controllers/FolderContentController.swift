@@ -37,26 +37,29 @@ class FolderContentController: UIViewController {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        //            UserDefaults.standard.set(encodable: sourceFolder, forKey: Constants.UserDefaultsKeys.contentList)
-        //        }
-        //        callback?(dataSourceFolder)
+        self.sourceFolder = Folder(photosList: [], title: "")
+        super.init(nibName: nil, bundle: nil)
     }
     
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: photosCollectionView)
         if let indexPath = photosCollectionView.indexPathForItem(at: location) {
             let item = collectionViewDataSource[indexPath.item]
-            showImageEditingScreen(imageName: item.imageName)
+            guard let list = sourceFolder.photosList else { return }
+            showLeaflet(photoList: list,
+                        imageName: item.title,
+                        isFavourite: item.isFavourite ?? false
+            )
+        }
+        else {
+            stopEditing()
         }
     }
     
     @objc func handleLongPress(_ sender: UILongPressGestureRecognizer) {
         photosCollectionView.indexPathsForVisibleItems.forEach { (indexPath) in
             let cell = photosCollectionView.cellForItem(at: indexPath) as? ContentCollectionViewCell
+            cell?.startEditingMode()
             cell?.wobble()
         }
     }
@@ -71,8 +74,16 @@ class FolderContentController: UIViewController {
         showAddingPhotoScreen(sender)
     }
     
+    private func stopEditing() {
+        pauseLayer(layer: photosCollectionView.layer)
+        for indexPath in photosCollectionView.indexPathsForVisibleItems {
+            if let cell = photosCollectionView.cellForItem(at: indexPath) as? ContentCollectionViewCell {
+                cell.endEditingMode()
+            }
+        }
+    }
+    
     private func setupContentScreenTitle() {
-        navigationItem.hidesBackButton = true
         navigationController?.isNavigationBarHidden = false
         navigationController?.navigationBar.prefersLargeTitles = true
         
@@ -81,9 +92,9 @@ class FolderContentController: UIViewController {
                                                               target: self,
                                                               action: #selector(addPhoto(_:))),
         ]
+        
         title = sourceFolder.title
     }
-    
     
     private func setupUI() {
         setupContentScreenTitle()
@@ -94,10 +105,10 @@ class FolderContentController: UIViewController {
     }
     
     private func configureCollectionDataSource() {
-        
         sourceFolder.photosList?.forEach { photo in
             let cellModel = CellModel(title: photo.imageName,
                                       imageName: photo.path,
+                                      isFavourite: photo.isFavourite,
                                       isAlbum: false)
             collectionViewDataSource.append(cellModel)
         }
@@ -106,6 +117,7 @@ class FolderContentController: UIViewController {
     private func makePhotoCellModel(photoModel: PhotoMetaData) -> CellModel {
         CellModel(title: photoModel.imageName,
                   imageName: photoModel.path,
+                  isFavourite: photoModel.isFavourite,
                   isAlbum: false)
         
     }
@@ -113,6 +125,7 @@ class FolderContentController: UIViewController {
     private func makeFolderCellModel(folder: Folder) -> CellModel {
         CellModel(title: folder.title,
                   imageName: "",
+                  isFavourite: false,
                   isAlbum: true)
     }
     
@@ -130,14 +143,16 @@ class FolderContentController: UIViewController {
         longPress.minimumPressDuration = Constants.longPressDuration
         longPress.delegate = self
         photosCollectionView.addGestureRecognizer(longPress)
-        
     }
     
-    func showImageEditingScreen(imageName: String) {
-        //        let newPhotoController = NewPhotoViewController()
-        //        newPhotoController.realImageName = imageName
-        //        newPhotoController.delegate = self
-        //        navigationController?.pushViewController(newPhotoController, animated: true)
+    private func showLeaflet(photoList: [PhotoMetaData], imageName: String, isFavourite: Bool) {
+        guard let imageIndex = photoList.firstIndex(where: { $0.imageName == imageName }) else { return }
+        let controller = LeafletController(photoList: photoList,
+                                           imageName: imageName,
+                                           isFavourite: isFavourite,
+                                           currentImageIndex: imageIndex
+        )
+        navigationController?.pushViewController(controller, animated: true)
     }
 }
 
@@ -152,9 +167,9 @@ extension FolderContentController: UICollectionViewDelegate, UICollectionViewDat
             return ContentCollectionViewCell()
         }
         
+        cell.delegate = self
         cell.configure(model: collectionViewDataSource[indexPath.item])
         return cell
-        
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -194,5 +209,29 @@ extension FolderContentController: UIGestureRecognizerDelegate, AddNewPhotoDeleg
         }
         collectionViewDataSource.append(makePhotoCellModel(photoModel: photoModel))
         photosCollectionView.reloadData()
+    }
+}
+
+extension FolderContentController: EditPhotoDelegate {
+    func saveDate(photoList: [PhotoMetaData]) {
+        sourceFolder.photosList = photoList
+    }
+}
+
+extension FolderContentController: ContentCollectionViewCellDelegate {
+    func contentCellDidTapDelete(_ cell: ContentCollectionViewCell) {
+        guard let indexPath = photosCollectionView.indexPath(for: cell) else { return }
+    
+        let name = collectionViewDataSource[indexPath.item].title
+        
+        collectionViewDataSource.remove(at: indexPath.item)
+        
+        if let imageIndex = sourceFolder.photosList?.firstIndex(where: { $0.imageName == name }) {
+            sourceFolder.photosList?.remove(at: imageIndex)
+        }
+        
+        photosCollectionView.performBatchUpdates{
+            photosCollectionView.deleteItems(at: [indexPath])
+        }
     }
 }

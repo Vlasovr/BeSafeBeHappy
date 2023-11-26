@@ -111,8 +111,8 @@
 			isa = PBXGroup;
 			children = (
 				5FCDE5DF2AF1328700603435 /* Services */,
-				5FCDE5DE2AF1326400603435 /* Models */,
 				5F45E0B32AC63045005836BD /* Application */,
+				5FCDE5DE2AF1326400603435 /* Models */,
 				5F45E0AC2AC62D94005836BD /* Views */,
 				5F45E0B02AC62E40005836BD /* Controllers */,
 				5FCDE5E12AF132D200603435 /* Extensions */,

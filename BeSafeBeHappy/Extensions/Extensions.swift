@@ -114,6 +114,12 @@ extension UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    
+    func pauseLayer(layer: CALayer) {
+        let pausedTime: CFTimeInterval = layer.convertTime(CACurrentMediaTime(), from: nil)
+        layer.speed = .zero
+        layer.timeOffset = pausedTime
+    }
 }
 
 extension ContentCollectionViewCell {
@@ -146,12 +152,12 @@ extension UserDefaults {
         return nil
     }
     
-    func loadAllUserContent() -> Folder {
-        if let content = self.object(Folder.self, forKey: Constants.UserDefaultsKeys.contentList) {
+    func loadAllUserContent() -> MainControllerDataSource {
+        if let content = self.object(MainControllerDataSource.self, forKey: Constants.UserDefaultsKeys.mainDataSource) {
             return content
         }
         
-        return Folder(insideFolders: nil, photosList: nil, title: "")
+        return Constants.defaultFolder
     }
     
     func saveAllUserContent(content: Folder) {
